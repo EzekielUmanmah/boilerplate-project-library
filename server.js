@@ -18,6 +18,12 @@ app.use(cors({origin: '*'})); //USED FOR FCC TESTING PURPOSES ONLY!
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+const mongoose = require('mongoose');
+mongoose.connect(process.env.DB, {
+  useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false
+}).then(() => console.log('Connected to MongoDB.'))
+  .catch((e) => console.error('Something went wrong...', e));
+
 //Index page (static HTML)
 app.route('/')
   .get(function (req, res) {
@@ -32,9 +38,10 @@ apiRoutes(app);
     
 //404 Not Found Middleware
 app.use(function(req, res, next) {
+  //console.log(err)
   res.status(404)
     .type('text')
-    .send('Not Found');
+    .send('no book exists');
 });
 
 //Start our server and tests!
