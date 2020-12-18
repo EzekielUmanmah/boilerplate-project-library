@@ -91,7 +91,7 @@ let id;
     suite('GET /api/books/[id] => book object with [id]', function(){
       
       test('Test GET /api/books/[id] with id not in db',  function(done){
-        const badId = '5fd9efa40673d006a4863asd';
+        const badId = '5fd9efa40673d006a4863987';
         chai.request(server)
         .get('/api/books/' + badId)
         .end((err, res) => {
@@ -142,7 +142,7 @@ let id;
       });
 
       test('Test POST /api/books/[id] with comment, id not in db', function(done){
-        const badId = '5fd9efa40673d006a4863asd';
+        const badId = '5fd9efa40673d006a4863987';
         chai.request(server)
         .post('/api/books/' + badId)
         .send({ comment: 'id does not exist' })
@@ -169,7 +169,7 @@ let id;
       });
 
       test('Test DELETE /api/books/[id] with  id not in db', function(done){
-        const badId = '5fd9efa40673d006a4863asd';
+        const badId = '5fd9efa40673d006a4863987';
         chai.request(server)
         .delete('/api/books/' + badId)
         .end((err, res) => {

@@ -13,7 +13,7 @@ const bookSchema = require('../schema');
 module.exports = function (app) {
 
   app.route('/api/books')
-    .get(function (req, res, next){
+    .get((req, res, next) => {
 
       bookSchema.find()
         .select('-__v')
@@ -25,7 +25,7 @@ module.exports = function (app) {
 
     })
     
-    .post(function (req, res, next){
+    .post((req, res, next) => {
       
       const {title} = req.body;
 
@@ -40,7 +40,7 @@ module.exports = function (app) {
 
       title ? 
       book.save( (err, result) => {
-        if(err) console.log(err);
+        if(err) return next(err);
         else{
           res.status(201).json(response);
         }
@@ -53,7 +53,7 @@ module.exports = function (app) {
       //if successful response will be 'complete delete successful'
 
       bookSchema.deleteMany({}, (err, result) => {
-        if(err) console.log(err);
+        if(err) return next(err);
         res.send('complete delete successful');
       });
 
@@ -62,20 +62,20 @@ module.exports = function (app) {
 
 
   app.route('/api/books/:id')
-    .get(function (req, res, next){
+    .get((req, res, next) => {
       let bookid = req.params.id;
       
       bookSchema.findById(bookid, (err, result) => {
-        //if(err) return res.send('no book exists')
-        if(!result) return res.status(404).send('no book exists')
+        if(err) return next(err);
+        if(!result) return res.status(404).send('no book exists');
         else{
-          res.json(result)
+          res.status(200).json(result)
         }
       });
 
     })
     
-    .post(function(req, res, next){
+    .post((req, res, next) => {
       let bookid = req.params.id;
       let comment = req.body.comment;
 
@@ -88,20 +88,20 @@ module.exports = function (app) {
 
       bookSchema.findByIdAndUpdate(bookid, updateComment, {new: true},
       (err, result) => {
-        if(err) console.log(err);
+        if(err) return next(err);
         if(!result) return res.status(404).send('no book exists');
-        res.json(result);
+        else {res.json(result);}
       });
 
     })
     
-    .delete(function(req, res, next){
+    .delete((req, res, next) => {
       let bookid = req.params.id;
 
       bookSchema.findByIdAndDelete(bookid, (err, result) => {
-        if(err) console.log(err);
-        if(!result) return res.status(404).send('no book exists');
-        res.send('delete successful');
+        if(err) return next(err);
+        else if(!result) return res.status(404).send('no book exists');else{
+        res.status(200).send('delete successful');}
       });
 
     });

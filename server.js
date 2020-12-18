@@ -38,11 +38,25 @@ apiRoutes(app);
     
 //404 Not Found Middleware
 app.use(function(req, res, next) {
-  //console.log(err)
-  res.status(404)
+  /*res.status(404)
     .type('text')
-    .send('no book exists');
+    .send('no book exists');*/
+  const error = new Error(
+    `The path ${req.originalUrl} was not found.`
+  );
+  error.statusCode = 404;
+  next(error);
 });
+
+app.use((err, req, res, next) => {
+  let errCode, errMessage;
+  //console.log((err))
+  if(err.kind == 'ObjectId'){
+    errCode = 404;
+    errMessage = 'no book exists';
+  }
+  res.status(errCode).send(errMessage)
+})
 
 //Start our server and tests!
 app.listen(process.env.PORT || 3000, function () {
