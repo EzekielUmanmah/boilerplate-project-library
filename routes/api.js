@@ -8,6 +8,7 @@
 
 'use strict';
 const mongoose = require('mongoose');
+const mongodb = require('mongodb');
 const bookSchema = require('../schema');
 
 module.exports = function (app) {
@@ -19,7 +20,7 @@ module.exports = function (app) {
         .select('-__v')
         .exec()
         .then(result => {
-          res.status(200).json(result);
+          return res.json(result);
         })
         .catch(next);
 
@@ -28,34 +29,37 @@ module.exports = function (app) {
     .post((req, res, next) => {
       
       const {title} = req.body;
-
+      //create a new book
       const book = new bookSchema({
         title
       });
-
+      //create the response object since save() does not allow chaining select() to specify desired fields
       const response = {
         _id: book._id,
         title: title
       };
 
-      title ? 
-      book.save( (err, result) => {
-        if(err) return next(err);
-        else{
-          res.status(201).json(response);
-        }
-      }) : 
-      res.status(404).send('missing required field title');
+      book.save()
+      .then(result => {
+        if(result) return res.json(response);
+      })
+      .catch(err => {
+        //fcc has specified custom response messages for validation errors, so no need to parse the error object to find the reason an operation fails
+        if(err) return res.send('missing required field title');
+      });
 
     })
     
     .delete(function(req, res, next){
-      //if successful response will be 'complete delete successful'
-
-      bookSchema.deleteMany({}, (err, result) => {
-        if(err) return next(err);
-        res.send('complete delete successful');
-      });
+      //while this request deletes all books, the response is never shown
+      bookSchema.deleteMany({})
+      .exec()
+      .then(result => {
+        //res.send('complete delete successful');
+        return res.json('complete delete successful');
+      })
+      //here the only error likely to occur is a server error
+      .catch(next)
 
     });
 
@@ -65,13 +69,14 @@ module.exports = function (app) {
     .get((req, res, next) => {
       let bookid = req.params.id;
       
-      bookSchema.findById(bookid, (err, result) => {
-        if(err) return next(err);
-        if(!result) return res.status(404).send('no book exists');
-        else{
-          res.status(200).json(result)
-        }
-      });
+      bookSchema.findById(bookid)
+      .exec()
+      .then(result => {
+        if(!result) return res.send('no book exists');  
+        return res.json(result);
+      })
+      //here the only error likely to occur is a server error or an invalid id error
+      .catch(err => res.send('no book exists'));
 
     })
     
@@ -79,7 +84,7 @@ module.exports = function (app) {
       let bookid = req.params.id;
       let comment = req.body.comment;
 
-      if(!comment) return res.status(404).send('missing required field comment');
+      if(!comment) return res.send('missing required field comment');
       //since any request to this route requires the comment field and there will be no comment deletion functionality, simply incrementing commentcount (via $inc) is fine.
       let updateComment = {
         $push : {comments: comment},
@@ -88,9 +93,9 @@ module.exports = function (app) {
 
       bookSchema.findByIdAndUpdate(bookid, updateComment, {new: true},
       (err, result) => {
-        if(err) return next(err);
-        if(!result) return res.status(404).send('no book exists');
-        else {res.json(result);}
+        //same response for both id syntax error (err) and bookid that doesn't exist in the db (result) 
+        if(err || !result) return res.send('no book exists');
+        return res.json(result);
       });
 
     })
@@ -99,9 +104,10 @@ module.exports = function (app) {
       let bookid = req.params.id;
 
       bookSchema.findByIdAndDelete(bookid, (err, result) => {
-        if(err) return next(err);
-        else if(!result) return res.status(404).send('no book exists');else{
-        res.status(200).send('delete successful');}
+        if(err || !result) return res.send('no book exists');
+        else {
+          return res.send('delete successful');
+        }
       });
 
     });

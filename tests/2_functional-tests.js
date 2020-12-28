@@ -1,3 +1,5 @@
+
+
 /*
 *
 *
@@ -12,29 +14,9 @@ const assert = chai.assert;
 const server = require('../server');
 
 chai.use(chaiHttp);
-
-suite('Functional Tests', function() {
 let id;
-  /*
-  * ----[EXAMPLE TEST]----
-  * Each test should completely test the response of the API end-point including response status code!
-  */
-  test('#example Test GET /api/books', function(done){
-     chai.request(server)
-      .get('/api/books')
-      .end(function(err, res){
-        assert.equal(res.status, 200);
-        assert.isArray(res.body, 'response should be an array');
-        assert.property(res.body[0], 'commentcount', 'Books in array should contain commentcount');
-        assert.property(res.body[0], 'title', 'Books in array should contain title');
-        assert.property(res.body[0], '_id', 'Books in array should contain _id');
-        done();
-      });
-  });
-  /*
-  * ----[END of EXAMPLE TEST]----
-  */
-
+suite('Functional Tests', function() {
+  
   suite('Routing tests', function() {
 
 
@@ -44,9 +26,9 @@ let id;
         chai.request(server)
         .post('/api/books')
         .send({ title: 'Starship Troopers' })
-        .end((err, res) => {
+        .end(function(err, res){
           id = res.body._id;
-          assert.equal(res.status, 201);
+          assert.equal(res.status, 200);
           assert.isObject(res.body, 'response should be an object');
           assert.equal(res.body.title, 'Starship Troopers');
           assert.property(res.body, '_id', 'response should contain an id');
@@ -57,9 +39,10 @@ let id;
       test('Test POST /api/books with no title given', function(done) {
         chai.request(server)
         .post('/api/books')
-        .send({title: ''})
-        .end((err, res) => { 
-          assert.equal(res.status, 404);
+        .send({})
+        .end(function(err, res){ 
+          assert.equal(res.status, 200);
+          assert.isString(res.text);
           assert.equal(res.text, 'missing required field title');
           done();
         });
@@ -73,7 +56,7 @@ let id;
       test('Test GET /api/books',  function(done){
         chai.request(server)
         .get('/api/books')
-        .end((err, res) => { 
+        .end(function(err, res){ 
           assert.equal(res.status, 200);
           assert.isArray(res.body, 'response is an array');
           assert.isObject(res.body[0], 'book is an object');
@@ -91,11 +74,13 @@ let id;
     suite('GET /api/books/[id] => book object with [id]', function(){
       
       test('Test GET /api/books/[id] with id not in db',  function(done){
-        const badId = '5fd9efa40673d006a4863987';
+        //const badId = '5fd9efa40673d006a4863987';
+        const badId = 'idthatdoesntexist';
         chai.request(server)
         .get('/api/books/' + badId)
-        .end((err, res) => {
-          assert.equal(res.status, 404);
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isString(res.text);
           assert.equal(res.text, 'no book exists');
           done();
         });
@@ -104,13 +89,15 @@ let id;
       test('Test GET /api/books/[id] with valid id in db',  function(done){
         chai.request(server)
         .get('/api/books/' + id)
-        .end((err, res) => { 
+        .end(function(err, res){ 
           assert.equal(res.status, 200);
           assert.isObject(res.body);
           assert.property(res.body, '_id');
           assert.property(res.body, 'comments');
           assert.property(res.body, 'commentcount');
           assert.property(res.body, 'title');
+          assert.equal(res.body._id, id);
+          assert.equal(res.body.title, 'Starship Troopers');
           done();
         });
       });
@@ -124,7 +111,7 @@ let id;
         chai.request(server)
         .post('/api/books/' + id)
         .send({ comment: 'SciFi Classic' })
-        .end((err, res) => { 
+        .end(function(err, res){ 
           assert.equal(res.status, 200);
           assert.deepEqual(res.body.comments, ['SciFi Classic']);
           done();
@@ -134,8 +121,9 @@ let id;
       test('Test POST /api/books/[id] without comment field', function(done){
         chai.request(server)
         .post('/api/books/' + id)
-        .end((err, res) => {
-          assert.equal(res.status, 404);
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isString(res.text);
           assert.equal(res.text, 'missing required field comment');
           done();
         });
@@ -146,8 +134,9 @@ let id;
         chai.request(server)
         .post('/api/books/' + badId)
         .send({ comment: 'id does not exist' })
-        .end((err, res) => {
-          assert.equal(res.status, 404);
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isString(res.text);
           assert.equal(res.text, 'no book exists');
           done();
         });
@@ -160,9 +149,10 @@ let id;
       test('Test DELETE /api/books/[id] with valid id in db', function(done){
         chai.request(server)
         .delete('/api/books/' + id)
-        .end((err, res) => {
+        .end(function(err, res){
           assert.equal(res.status, 200);
           assert.deepEqual(res.body, {});
+          assert.isString(res.text);
           assert.equal(res.text, 'delete successful');
           done();
         });
@@ -172,8 +162,9 @@ let id;
         const badId = '5fd9efa40673d006a4863987';
         chai.request(server)
         .delete('/api/books/' + badId)
-        .end((err, res) => {
-          assert.equal(res.status, 404);
+        .end(function(err, res){
+          assert.equal(res.status, 200);
+          assert.isString(res.text);
           assert.equal(res.text, 'no book exists');
           done();
         });

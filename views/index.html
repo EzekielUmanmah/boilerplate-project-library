@@ -35,12 +35,13 @@
   </form>
 </div>
 <hr style='margin: 50px'>
+
 <div id='sampleui'>
   <h2 style="text-align: left">Sample Front-End</h2>
   <form id="newBookForm" class="border">
     <label for="bookTitleToAdd">New Book Title</label>
     <input type="text" id="bookTitleToAdd" name="title" placeholder="Moby Dick" style="width: 295px">
-    <button type="submit" value="Submit" id="newBook">Submit New Book!</button>
+    <button class="newBook" type="submit" value="Submit" id="newBook">Submit New Book!</button>
   </form>
   <div id='display'></div>
   <div id='bookDetail' class='border'>
@@ -61,7 +62,9 @@
   */
   $(function() {
     $('#commentTest').submit(function(){
-      let  id = $('#idinputtest').val();
+      //if a comment is submitted with a blank id, the incorrect error msg 'missing required field title' from /api/books will be served because the form's action + method will be the same as the form to create a new book; any other invalid entry will otherwise trigger the correct error response from '/api/books/:project'
+      let  id = $('#idinputtest').val(); 
+      if(id == '') id = 'noIdEntered';
       $(this).attr('action', "/api/books/" + id);
     });
   });
